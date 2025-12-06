@@ -8,16 +8,9 @@ from playwright.sync_api import Playwright, sync_playwright, expect
 import asyncio
 import nest_asyncio
 from playwright.async_api import async_playwright
-from google.colab.patches import cv2_imshow # 이미지 확인용 (선택)
-import cv2 # 이미지 확인용 (선택)
 
 
 st.write("# YouTube Post Screenshot App")
-
-
-
-# Colab의 기존 이벤트 루프에 패치를 적용하여 충돌 방지
-nest_asyncio.apply()
 
 async def capture_youtube_post(post_url, output_path="post_capture.png"):
     st.write(f"🌑⚪ 둥근모서리 다크모드 캡처 시작: {post_url}")
