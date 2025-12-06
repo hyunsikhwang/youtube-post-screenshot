@@ -1,6 +1,5 @@
 pytest-playwright
 streamlit
-seleniumbase
 webdriver-manager
 bs4
 pandas
@@ -11,4 +10,5 @@ extra_streamlit_components
 xlsxwriter
 stqdm
 pytz
-streamlit-authenticator
+playwright
+nest_asyncio
