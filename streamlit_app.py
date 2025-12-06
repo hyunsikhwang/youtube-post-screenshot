@@ -20,7 +20,7 @@ st.write("# YouTube Post Screenshot App")
 nest_asyncio.apply()
 
 async def capture_youtube_post(post_url, output_path="post_capture.png"):
-    print(f"🌑⚪ 둥근모서리 다크모드 캡처 시작: {post_url}")
+    st.write(f"🌑⚪ 둥근모서리 다크모드 캡처 시작: {post_url}")
     
     async with async_playwright() as p:
         browser = await p.chromium.launch(
@@ -90,16 +90,16 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
             
             # 버튼이 화면에 보이면 클릭 (timeout=3000: 3초만 기다려보고 없으면 넘어감)
             if await more_button.is_visible(timeout=3000):
-                print("🔽 '더 보기' 버튼 발견! 내용을 펼칩니다.")
+                st.write("🔽 '더 보기' 버튼 발견! 내용을 펼칩니다.")
                 await more_button.click()
                 
                 # 클릭 후 텍스트가 펼쳐지는 애니메이션 대기 (0.5~1초)
                 await page.wait_for_timeout(1000)
             else:
-                print("ℹ️ '더 보기' 버튼이 없습니다 (짧은 글).")
+                st.write("ℹ️ '더 보기' 버튼이 없습니다 (짧은 글).")
         except Exception as e:
             # 에러가 나도 스크린샷은 찍어야 하므로 패스
-            print(f"⚠️ 더 보기 처리 중 경미한 이슈: {e}")
+            st.write(f"⚠️ 더 보기 처리 중 경미한 이슈: {e}")
 
         try:
             await post_locator.wait_for(timeout=10000)
@@ -109,9 +109,9 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
                 path=output_path, 
                 omit_background=True
             )
-            print(f"✅ 캡처 완료: {output_path}")
+            st.write(f"✅ 캡처 완료: {output_path}")
         except Exception as e:
-            print(f"❌ 오류 발생: {e}")
+            st.write(f"❌ 오류 발생: {e}")
 
         await browser.close()
         return output_path
