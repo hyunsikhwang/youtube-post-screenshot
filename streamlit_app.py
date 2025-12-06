@@ -78,7 +78,7 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
                 background-color: #181818 !important;
                 border-radius: 24px !important;
                 border: 1px solid #333333 !important;
-                padding: 25px !important;
+                padding: 20px !important;
                 overflow: hidden !important;
                 /* 상단바가 없어졌으므로 최상단에 딱 붙지 않게 약간의 여백을 줍니다 */
                 margin: 20px auto !important; 
