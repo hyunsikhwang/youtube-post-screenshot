@@ -12,6 +12,8 @@ nest_asyncio.apply()  # Streamlit의 루프와 충돌 방지
 if not os.path.exists("ms-playwright"): # 중복 설치 방지용 체크 (선택사항)
     os.system("playwright install chromium")
 
+st.set_page_config(page_title="YouTube Post Screenshot", page_icon=":rocket:")
+
 st.write("# YouTube Post Screenshot App")
 
 async def capture_youtube_post(post_url, output_path="post_capture.png"):
