@@ -37,10 +37,24 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         except Exception as e:
             st.write(f"⚠️ 페이지 로딩 대기 시간 초과 (계속 진행): {e}")
 
-        # ... (CSS 및 나머지 로직은 기존과 동일) ...
-        # ✨ [CSS 수정] 폰트, 둥근 모서리, 그리고 '글자색 강제 화이트' 적용
+        # ✨ [CSS 수정] 상단바 숨김, 폰트(웹폰트), 둥근 모서리, 색상 강제 적용
         await page.add_style_tag(content="""
-            /* 1. 나눔스퀘어 웹폰트 정의 (Regular, Bold) */
+            /* -------------------------------------------------------
+               0. [핵심 해결책] 상단 검색창(Masthead) 숨기기
+            ------------------------------------------------------- */
+            ytd-masthead, #masthead-container {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+            }
+            /* 상단바가 사라진 공간만큼 전체 페이지 컨테이너를 위로 올립니다 */
+            ytd-app #page-manager.ytd-app {
+                margin-top: 0 !important;
+            }
+
+            /* -------------------------------------------------------
+               1. 나눔스퀘어 웹폰트 정의 및 적용
+            ------------------------------------------------------- */
             @font-face {
                 font-family: 'NanumSquare';
                 font-weight: 400;
@@ -49,24 +63,29 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
             }
             @font-face {
                 font-family: 'NanumSquare';
-                font-weight: 700; /* 볼드체 대응 */
+                font-weight: 700;
                 font-style: normal;
                 src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareB.woff2') format('woff2');
             }
-
-            /* 모든 요소에 나눔스퀘어 적용 */
             * { font-family: 'NanumSquare', sans-serif !important; }
             
-            /* 2. 게시글 컨테이너 스타일 (배경 다크, 둥근 모서리) */
+            /* -------------------------------------------------------
+               2. 게시글 컨테이너 스타일
+            ------------------------------------------------------- */
             ytd-backstage-post-renderer {
                 background-color: #181818 !important;
                 border-radius: 24px !important;
                 border: 1px solid #333333 !important;
                 padding: 25px !important;
                 overflow: hidden !important;
+                /* 상단바가 없어졌으므로 최상단에 딱 붙지 않게 약간의 여백을 줍니다 */
+                margin: 20px auto !important; 
+                display: block !important; /* 요소가 제대로 영역을 잡도록 설정 */
             }
 
-            /* 3. [핵심 해결책] 내부의 모든 요소(*)에게 색상 강제 부여 */
+            /* -------------------------------------------------------
+               3. 내부 요소 색상 강제 부여 (화이트)
+            ------------------------------------------------------- */
             ytd-backstage-post-renderer, 
             ytd-backstage-post-renderer * {
                 color: #ffffff !important; 
@@ -74,20 +93,21 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
                 --yt-spec-text-secondary: #dddddd !important;
             }
 
-            /* 4. 링크 색상 유지 */
-            ytd-backstage-post-renderer a {
+            /* 4. 링크 및 해시태그 색상 유지 */
+            ytd-backstage-post-renderer a,
+            ytd-backstage-post-renderer span[class*="hashtag"] {
                 color: #3ea6ff !important;
                 text-decoration: none !important;
             }
         """)
-        
+
         # 폰트가 다운로드되고 적용될 시간을 줍니다.
         # 단순히 시간만 기다리는 것(wait_for_timeout)보다 더 확실한 방법입니다.
         try:
              await page.evaluate("document.fonts.ready")
         except:
              # 혹시 구형 브라우저 등에서 실패할 경우를 대비해 짧은 대기 시간 추가
-             await page.wait_for_timeout(1000)
+             await page.wait_for_timeout(2000)
 
         # 팝업 닫기 시도
         try:
