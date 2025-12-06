@@ -12,12 +12,142 @@ nest_asyncio.apply()  # Streamlit의 루프와 충돌 방지
 if not os.path.exists("ms-playwright"): # 중복 설치 방지용 체크 (선택사항)
     os.system("playwright install chromium")
 
-st.set_page_config(page_title="YouTube Post Screenshot", page_icon=":rocket:")
+st.set_page_config(page_title="YouTube Post Screenshot", page_icon=":rocket:", layout="centered")
 
-st.write("# YouTube Post Screenshot App")
+# ==========================================
+# [DESIGN] Liquid Glass & Modern UI Styling
+# ==========================================
+st.markdown("""
+<style>
+    /* 1. 전체 배경: 딥한 다크 그라데이션 & 애니메이션 */
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #141E30);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        color: #ffffff;
+    }
+    
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* 2. 폰트 적용 (Pretendard / NanumSquare) */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * {
+        font-family: 'Pretendard', sans-serif !important;
+    }
+
+    /* 3. 헤더 (Liquid Text Effect) */
+    .main-header {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #00c6ff, #0072ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px rgba(0, 198, 255, 0.3);
+    }
+    .sub-header {
+        text-align: center;
+        color: #cfd8dc;
+        font-size: 1rem;
+        margin-bottom: 40px;
+        opacity: 0.8;
+    }
+
+    /* 4. Glassmorphism Card (입력창 컨테이너) */
+    .glass-container {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-bottom: 20px;
+    }
+
+    /* 5. Input Field Styling */
+    .stTextInput > div > div > input {
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 10px 15px !important;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #00c6ff !important;
+        box-shadow: 0 0 10px rgba(0, 198, 255, 0.5) !important;
+    }
+    .stTextInput label {
+        color: #e0e0e0 !important;
+        font-weight: 600;
+    }
+
+    /* 6. Button Styling (Neon Glow) */
+    .stButton > button {
+        width: 100%;
+        background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 20px !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4) !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 114, 255, 0.6) !important;
+    }
+    .stButton > button:active {
+        transform: translateY(1px);
+    }
+
+    /* 7. Download Button Styling */
+    .stDownloadButton > button {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #00c6ff !important;
+        border: 1px solid #00c6ff !important;
+        border-radius: 12px !important;
+        width: 100%;
+        transition: 0.3s;
+    }
+    .stDownloadButton > button:hover {
+        background: rgba(0, 198, 255, 0.1) !important;
+        box-shadow: 0 0 15px rgba(0, 198, 255, 0.3) !important;
+    }
+
+    /* 8. Spinner & Text styles */
+    .stSpinner > div {
+        border-top-color: #00c6ff !important;
+    }
+    
+    /* 9. Image Border */
+    img {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* 불필요한 상단 바 제거 */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+</style>
+""", unsafe_allow_html=True)
+
+# UI Header
+st.markdown('<div class="main-header">YouTube Post Capture</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Premium Dark Mode & Rounded Corners</div>', unsafe_allow_html=True)
 
 async def capture_youtube_post(post_url, output_path="post_capture.png"):
-    st.write(f"🌑⚪ 둥근모서리 다크모드 캡처 시작: {post_url}")
+    # UI 피드백을 깔끔하게 보여주기 위해 Container 사용
+    status_container = st.empty()
+    status_container.info(f"🔄 캡처 프로세스 시작... {post_url}")
     
     async with async_playwright() as p:
         # Streamlit Cloud에서는 headless=True 및 sandbox 비활성화 필수
@@ -37,7 +167,7 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         try:
             await page.goto(post_url, wait_until="domcontentloaded", timeout=60000)
         except Exception as e:
-            st.write(f"⚠️ 페이지 로딩 대기 시간 초과 (계속 진행): {e}")
+            st.warning(f"⚠️ 페이지 로딩 대기 시간 초과 (계속 진행): {e}")
 
         # ✨ [CSS 수정] 상단바 숨김, 폰트(웹폰트), 둥근 모서리, 색상 강제 적용
         await page.add_style_tag(content="""
@@ -104,11 +234,9 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         """)
 
         # 폰트가 다운로드되고 적용될 시간을 줍니다.
-        # 단순히 시간만 기다리는 것(wait_for_timeout)보다 더 확실한 방법입니다.
         try:
              await page.evaluate("document.fonts.ready")
         except:
-             # 혹시 구형 브라우저 등에서 실패할 경우를 대비해 짧은 대기 시간 추가
              await page.wait_for_timeout(2000)
 
         # 팝업 닫기 시도
@@ -124,44 +252,51 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         try:
             more_button = post_locator.get_by_text("Read more")
             if await more_button.is_visible(timeout=3000):
-                st.write("🔽 '더 보기' 버튼 발견! 내용을 펼칩니다.")
+                status_container.write("🔽 '더 보기' 버튼 발견! 내용을 펼칩니다.")
                 await more_button.click()
                 await page.wait_for_timeout(1000)
             else:
-                st.write("ℹ️ '더 보기' 버튼이 없습니다.")
+                pass # 조용히 넘어감
         except Exception as e:
-            st.write(f"⚠️ 더 보기 처리 중 이슈: {e}")
+            st.warning(f"⚠️ 더 보기 처리 중 이슈: {e}")
 
         try:
             await post_locator.wait_for(timeout=10000)
             await post_locator.screenshot(path=output_path, omit_background=True)
-            st.write(f"✅ 캡처 완료: {output_path}")
-            st.image(output_path) # 캡처된 이미지 화면에 표시
+            status_container.success(f"✅ 캡처 완료!") # 경로 노출 대신 심플한 메시지
+            # 이미지 표시는 메인 루프에서 처리
         except Exception as e:
-            st.write(f"❌ 캡처 및 저장 오류: {e}")
+            status_container.error(f"❌ 캡처 및 저장 오류: {e}")
 
         await browser.close()
         return output_path
 
 
 # --- 실행부 ---
+
+# Glass Card 안에 UI 요소 배치
+st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+
 default_url = "https://t.co/ukaFlldhP9"
 target_url = st.text_input("유튜브 게시글 URL 입력", default_url)
 
-if st.button("캡처 실행"):
-    # 1. 캡처 함수 실행
-    result_path = asyncio.run(capture_youtube_post(target_url))
-    
-    # 2. 결과 파일이 존재하면 이미지 표시 및 다운로드 버튼 생성
-    if result_path and os.path.exists(result_path):
-        # (1) 이미지 화면 표시
-        st.image(result_path, caption="캡처 결과", use_column_width=True)
+if st.button("🚀 캡처 실행"):
+    with st.spinner("✨ 캡처를 준비하고 있습니다..."):
+        # 1. 캡처 함수 실행
+        result_path = asyncio.run(capture_youtube_post(target_url))
         
-        # (2) 다운로드 버튼 추가
-        with open(result_path, "rb") as file:
-            btn = st.download_button(
-                label="📥 이미지 다운로드",
-                data=file,
-                file_name="youtube_post_capture.png",
-                mime="image/png"
-            )
+        # 2. 결과 파일이 존재하면 이미지 표시 및 다운로드 버튼 생성
+        if result_path and os.path.exists(result_path):
+            st.markdown("---")
+            # (1) 이미지 화면 표시
+            st.image(result_path, caption="Capture Result", use_column_width=True)
+            
+            # (2) 다운로드 버튼 추가
+            with open(result_path, "rb") as file:
+                btn = st.download_button(
+                    label="📥 이미지 다운로드 (PNG)",
+                    data=file,
+                    file_name="youtube_post_capture.png",
+                    mime="image/png"
+                )
+st.markdown('</div>', unsafe_allow_html=True)
