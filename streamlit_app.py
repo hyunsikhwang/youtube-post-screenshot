@@ -123,4 +123,4 @@ target_url = "https://t.co/ukaFlldhP9"
 
 # Colab은 이미 비동기 환경이므로 asyncio.run() 대신 바로 await를 사용합니다.
 # 실제 실행 시에는 아래 주석을 풀고 URL을 입력하세요.
-await capture_youtube_post(target_url)
+asyncio.run(capture_youtube_post(target_url))
