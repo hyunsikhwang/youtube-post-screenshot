@@ -4,12 +4,10 @@ import asyncio
 import nest_asyncio
 from playwright.async_api import async_playwright
 
-# 1. 초기 설정: 비동기 루프 패치 및 브라우저 설치
-nest_asyncio.apply()  # Streamlit의 루프와 충돌 방지
+# 1. 초기 설정
+nest_asyncio.apply()
 
-# 시스템 레벨 설치(install-deps)는 packages.txt가 처리하므로 삭제합니다.
-# 브라우저 바이너리(chromium)는 파이썬 레벨에서 설치가 필요할 수 있습니다.
-if not os.path.exists("ms-playwright"): # 중복 설치 방지용 체크 (선택사항)
+if not os.path.exists("ms-playwright"):
     os.system("playwright install chromium")
 
 st.set_page_config(page_title="YouTube Post Screenshot", page_icon=":rocket:", layout="centered")
@@ -19,12 +17,12 @@ st.set_page_config(page_title="YouTube Post Screenshot", page_icon=":rocket:", l
 # ==========================================
 st.markdown("""
 <style>
-    /* 1. 전체 배경: 화사하고 부드러운 파스텔 그라데이션 (Morning Sky) */
+    /* 1. 전체 배경: 화사하고 부드러운 파스텔 그라데이션 */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #e0c3fc, #cfdef3);
         background-size: 400% 400%;
         animation: gradientBG 15s ease infinite;
-        color: #333333; /* 텍스트는 가독성 좋은 다크 그레이 */
+        color: #333333;
     }
     
     @keyframes gradientBG {
@@ -33,13 +31,11 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* 2. 폰트 적용 (Pretendard / NanumSquare) */
+    /* 2. 폰트 적용 */
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    * {
-        font-family: 'Pretendard', sans-serif !important;
-    }
+    * { font-family: 'Pretendard', sans-serif !important; }
 
-    /* 3. 헤더 (Bright Gradient Text) */
+    /* 3. 헤더 디자인 */
     .main-header {
         font-size: 3rem;
         font-weight: 800;
@@ -48,7 +44,6 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         text-align: center;
         margin-bottom: 10px;
-        /* 부드러운 빛 번짐 효과 */
         text-shadow: 0 10px 30px rgba(37, 117, 252, 0.2); 
     }
     .sub-header {
@@ -60,41 +55,35 @@ st.markdown("""
         letter-spacing: -0.5px;
     }
 
-    /* 4. Glassmorphism Card (밝은 유리 효과) */
-    .glass-container {
-        background: rgba(255, 255, 255, 0.45); /* 반투명 흰색 */
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.8); /* 테두리는 더 하얗게 */
-        padding: 35px;
-        /* 그림자는 부드러운 블루톤 */
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); 
-        margin-bottom: 20px;
+    /* ====================================================================
+       4. [핵심 수정] st.container(border=True)를 Glass Card로 변신시키기
+       Streamlit의 기본 border 컨테이너 스타일을 덮어씌웁니다.
+    ==================================================================== */
+    [data-testid="stVerticalBlockBorderWrapper"] > div {
+        background: rgba(255, 255, 255, 0.45) !important; /* 반투명 흰색 */
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(255, 255, 255, 0.8) !important; /* 테두리는 더 하얗게 */
+        padding: 35px !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important; 
     }
 
-    /* 5. Input Field Styling (Clean White) */
+    /* 5. Input Field Styling */
     .stTextInput > div > div > input {
         background-color: rgba(255, 255, 255, 0.8) !important;
         color: #333333 !important;
         border: 1px solid rgba(200, 200, 200, 0.5) !important;
         border-radius: 16px !important;
         padding: 12px 15px !important;
-        font-size: 1rem !important;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
     }
     .stTextInput > div > div > input:focus {
         border-color: #2575fc !important;
         background-color: #ffffff !important;
         box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2) !important;
     }
-    .stTextInput label {
-        color: #444444 !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-    }
 
-    /* 6. Button Styling (Vivid Gradient) */
+    /* 6. Button Styling */
     .stButton > button {
         width: 100%;
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important;
@@ -111,11 +100,8 @@ st.markdown("""
         transform: translateY(-3px);
         box-shadow: 0 15px 25px rgba(37, 117, 252, 0.4) !important;
     }
-    .stButton > button:active {
-        transform: translateY(1px);
-    }
-
-    /* 7. Download Button Styling (Outline Style) */
+    
+    /* 7. Download Button */
     .stDownloadButton > button {
         background: rgba(255, 255, 255, 0.6) !important;
         color: #2575fc !important;
@@ -123,29 +109,15 @@ st.markdown("""
         border-radius: 16px !important;
         width: 100%;
         font-weight: 600 !important;
-        transition: 0.3s;
     }
     .stDownloadButton > button:hover {
         background: #2575fc !important;
         color: #ffffff !important;
-        box-shadow: 0 5px 15px rgba(37, 117, 252, 0.2) !important;
     }
 
-    /* 8. Spinner & Text styles */
-    .stSpinner > div {
-        border-top-color: #2575fc !important;
-    }
-    
-    /* 9. Image Border */
-    img {
-        border-radius: 20px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15); /* 부드러운 그림자 */
-        border: 4px solid #ffffff; /* 흰색 프레임 효과 */
-    }
-    
-    /* 불필요한 상단 바 제거 */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
+    /* UI 정리 */
+    header, footer {visibility: hidden;}
+    img { border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); border: 4px solid #ffffff; }
     
 </style>
 """, unsafe_allow_html=True)
@@ -155,17 +127,11 @@ st.markdown('<div class="main-header">YouTube Post Capture</div>', unsafe_allow_
 st.markdown('<div class="sub-header">Premium Bright Mode & Glass Design</div>', unsafe_allow_html=True)
 
 async def capture_youtube_post(post_url, output_path="post_capture.png"):
-    # UI 피드백을 깔끔하게 보여주기 위해 Container 사용
     status_container = st.empty()
     status_container.info(f"🔄 캡처 프로세스 시작... {post_url}")
     
     async with async_playwright() as p:
-        # Streamlit Cloud에서는 headless=True 및 sandbox 비활성화 필수
-        browser = await p.chromium.launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox'] 
-        )
-        
+        browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
         context = await browser.new_context(
             viewport={"width": 1920, "height": 1080},
             device_scale_factor=3,
@@ -177,84 +143,35 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         try:
             await page.goto(post_url, wait_until="domcontentloaded", timeout=60000)
         except Exception as e:
-            st.warning(f"⚠️ 페이지 로딩 대기 시간 초과 (계속 진행): {e}")
+            st.warning(f"⚠️ 페이지 로딩 이슈 (계속 진행): {e}")
 
-        # ✨ [CSS 수정] 상단바 숨김, 폰트(웹폰트), 둥근 모서리, 색상 강제 적용
+        # 스타일 주입 및 로직 (기존과 동일)
         await page.add_style_tag(content="""
-            /* -------------------------------------------------------
-               0. [핵심 해결책] 상단 검색창(Masthead) 숨기기
-            ------------------------------------------------------- */
-            ytd-masthead, #masthead-container {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-            }
-            /* 상단바가 사라진 공간만큼 전체 페이지 컨테이너를 위로 올립니다 */
-            ytd-app #page-manager.ytd-app {
-                margin-top: 0 !important;
-            }
-
-            /* -------------------------------------------------------
-               1. 나눔스퀘어 웹폰트 정의 및 적용
-            ------------------------------------------------------- */
-            @font-face {
-                font-family: 'NanumSquare';
-                font-weight: 400;
-                font-style: normal;
-                src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareR.woff2') format('woff2');
-            }
-            @font-face {
-                font-family: 'NanumSquare';
-                font-weight: 700;
-                font-style: normal;
-                src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareB.woff2') format('woff2');
-            }
+            ytd-masthead, #masthead-container { display: none !important; visibility: hidden !important; height: 0 !important; }
+            ytd-app #page-manager.ytd-app { margin-top: 0 !important; }
+            @font-face { font-family: 'NanumSquare'; src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareR.woff2') format('woff2'); }
+            @font-face { font-family: 'NanumSquare'; font-weight: 700; src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareB.woff2') format('woff2'); }
             * { font-family: 'NanumSquare', sans-serif !important; }
-            
-            /* -------------------------------------------------------
-               2. 게시글 컨테이너 스타일
-            ------------------------------------------------------- */
             ytd-backstage-post-renderer {
-                background-color: #181818 !important;
-                border-radius: 24px !important;
-                border: 1px solid #333333 !important;
-                padding: 20px !important;
-                overflow: hidden !important;
-                /* 상단바가 없어졌으므로 최상단에 딱 붙지 않게 약간의 여백을 줍니다 */
-                margin: 20px auto !important; 
-                display: block !important; /* 요소가 제대로 영역을 잡도록 설정 */
+                background-color: #181818 !important; border-radius: 24px !important;
+                border: 1px solid #333333 !important; padding: 20px !important;
+                margin: 20px auto !important; display: block !important;
             }
-
-            /* -------------------------------------------------------
-               3. 내부 요소 색상 강제 부여 (화이트)
-            ------------------------------------------------------- */
-            ytd-backstage-post-renderer, 
-            ytd-backstage-post-renderer * {
-                color: #ffffff !important; 
-                --yt-spec-text-primary: #ffffff !important;
-                --yt-spec-text-secondary: #dddddd !important;
+            ytd-backstage-post-renderer, ytd-backstage-post-renderer * {
+                color: #ffffff !important; --yt-spec-text-primary: #ffffff !important; --yt-spec-text-secondary: #dddddd !important;
             }
-
-            /* 4. 링크 및 해시태그 색상 유지 */
-            ytd-backstage-post-renderer a,
-            ytd-backstage-post-renderer span[class*="hashtag"] {
-                color: #3ea6ff !important;
-                text-decoration: none !important;
+            ytd-backstage-post-renderer a, ytd-backstage-post-renderer span[class*="hashtag"] {
+                color: #3ea6ff !important; text-decoration: none !important;
             }
         """)
 
-        # 폰트가 다운로드되고 적용될 시간을 줍니다.
-        try:
-             await page.evaluate("document.fonts.ready")
-        except:
-             await page.wait_for_timeout(2000)
+        try: await page.evaluate("document.fonts.ready")
+        except: await page.wait_for_timeout(2000)
 
-        # 팝업 닫기 시도
         try:
             if await page.locator('button[aria-label*="Reject"]').is_visible():
                  await page.click('button[aria-label*="Reject"]')
-        except:
-            pass 
+        except: pass 
 
         selector = "ytd-backstage-post-renderer"
         post_locator = page.locator(selector).first
@@ -265,10 +182,7 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
                 status_container.write("🔽 '더 보기' 버튼 발견! 내용을 펼칩니다.")
                 await more_button.click()
                 await page.wait_for_timeout(1000)
-            else:
-                pass 
-        except Exception as e:
-            st.warning(f"⚠️ 더 보기 처리 중 이슈: {e}")
+        except: pass
 
         try:
             await post_locator.wait_for(timeout=10000)
@@ -281,31 +195,28 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         return output_path
 
 
-# --- 실행부 ---
+# --- 실행부 (수정됨) ---
 
-# Glass Card 안에 UI 요소 배치
-st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+# [수정] HTML div 대신 Streamlit의 'border container' 사용
+# CSS에서 [data-testid="stVerticalBlockBorderWrapper"]를 타겟팅하여 Glass 효과를 적용했으므로,
+# 여기에 들어가는 모든 위젯은 자동으로 유리 카드 안에 배치됩니다.
 
-default_url = "https://t.co/ukaFlldhP9"
-target_url = st.text_input("유튜브 게시글 URL 입력", default_url)
+with st.container(border=True):
+    default_url = "https://t.co/ukaFlldhP9"
+    target_url = st.text_input("유튜브 게시글 URL 입력", default_url)
 
-if st.button("🚀 캡처 실행"):
-    with st.spinner("✨ 캡처를 준비하고 있습니다..."):
-        # 1. 캡처 함수 실행
-        result_path = asyncio.run(capture_youtube_post(target_url))
-        
-        # 2. 결과 파일이 존재하면 이미지 표시 및 다운로드 버튼 생성
-        if result_path and os.path.exists(result_path):
-            st.markdown("---")
-            # (1) 이미지 화면 표시
-            st.image(result_path, caption="Capture Result", use_column_width=True)
+    if st.button("🚀 캡처 실행"):
+        with st.spinner("✨ 캡처를 준비하고 있습니다..."):
+            result_path = asyncio.run(capture_youtube_post(target_url))
             
-            # (2) 다운로드 버튼 추가
-            with open(result_path, "rb") as file:
-                btn = st.download_button(
-                    label="📥 이미지 다운로드 (PNG)",
-                    data=file,
-                    file_name="youtube_post_capture.png",
-                    mime="image/png"
-                )
-st.markdown('</div>', unsafe_allow_html=True)
+            if result_path and os.path.exists(result_path):
+                st.markdown("---")
+                st.image(result_path, caption="Capture Result", use_column_width=True)
+                
+                with open(result_path, "rb") as file:
+                    btn = st.download_button(
+                        label="📥 이미지 다운로드 (PNG)",
+                        data=file,
+                        file_name="youtube_post_capture.png",
+                        mime="image/png"
+                    )
