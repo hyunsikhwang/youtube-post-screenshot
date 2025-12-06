@@ -40,8 +40,24 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         # ... (CSS 및 나머지 로직은 기존과 동일) ...
         # ✨ [CSS 수정] 폰트, 둥근 모서리, 그리고 '글자색 강제 화이트' 적용
         await page.add_style_tag(content="""
-            @font-face { font-family: 'NanumSquare'; src: local('NanumSquare'); }
+            /* 1. 나눔스퀘어 웹폰트 정의 (Regular, Bold) */
+            @font-face {
+                font-family: 'NanumSquare';
+                font-weight: 400;
+                font-style: normal;
+                src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareR.woff2') format('woff2');
+            }
+            @font-face {
+                font-family: 'NanumSquare';
+                font-weight: 700; /* 볼드체 대응 */
+                font-style: normal;
+                src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@master/NanumSquareB.woff2') format('woff2');
+            }
+
+            /* 모든 요소에 나눔스퀘어 적용 */
             * { font-family: 'NanumSquare', sans-serif !important; }
+            
+            /* 2. 게시글 컨테이너 스타일 (배경 다크, 둥근 모서리) */
             ytd-backstage-post-renderer {
                 background-color: #181818 !important;
                 border-radius: 24px !important;
@@ -49,19 +65,29 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
                 padding: 25px !important;
                 overflow: hidden !important;
             }
+
+            /* 3. [핵심 해결책] 내부의 모든 요소(*)에게 색상 강제 부여 */
             ytd-backstage-post-renderer, 
             ytd-backstage-post-renderer * {
-                color: #ffffff !important;
+                color: #ffffff !important; 
                 --yt-spec-text-primary: #ffffff !important;
                 --yt-spec-text-secondary: #dddddd !important;
             }
+
+            /* 4. 링크 색상 유지 */
             ytd-backstage-post-renderer a {
                 color: #3ea6ff !important;
                 text-decoration: none !important;
             }
         """)
-
-        await page.wait_for_timeout(500)
+        
+        # 폰트가 다운로드되고 적용될 시간을 줍니다.
+        # 단순히 시간만 기다리는 것(wait_for_timeout)보다 더 확실한 방법입니다.
+        try:
+             await page.evaluate("document.fonts.ready")
+        except:
+             # 혹시 구형 브라우저 등에서 실패할 경우를 대비해 짧은 대기 시간 추가
+             await page.wait_for_timeout(1000)
 
         # 팝업 닫기 시도
         try:
