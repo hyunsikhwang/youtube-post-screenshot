@@ -143,11 +143,25 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
         await browser.close()
         return output_path
 
+
 # --- 실행부 ---
-target_url = st.text_input("유튜브 게시글 URL 입력", "https://t.co/ukaFlldhP9")
+default_url = "https://t.co/ukaFlldhP9"
+target_url = st.text_input("유튜브 게시글 URL 입력", default_url)
 
 if st.button("캡처 실행"):
-    # nest_asyncio가 적용되었으므로 asyncio.run을 안전하게 호출하거나 
-    # 이미 루프가 있다면 await로 처리해야 하지만, 
-    # Streamlit 최상위 레벨에서는 asyncio.run()이 가장 깔끔합니다.
-    asyncio.run(capture_youtube_post(target_url))
+    # 1. 캡처 함수 실행
+    result_path = asyncio.run(capture_youtube_post(target_url))
+    
+    # 2. 결과 파일이 존재하면 이미지 표시 및 다운로드 버튼 생성
+    if result_path and os.path.exists(result_path):
+        # (1) 이미지 화면 표시
+        st.image(result_path, caption="캡처 결과", use_column_width=True)
+        
+        # (2) 다운로드 버튼 추가
+        with open(result_path, "rb") as file:
+            btn = st.download_button(
+                label="📥 이미지 다운로드",
+                data=file,
+                file_name="youtube_post_capture.png",
+                mime="image/png"
+            )
