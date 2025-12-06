@@ -1,0 +1,14 @@
+pytest-playwright
+streamlit
+seleniumbase
+webdriver-manager
+bs4
+pandas
+html5lib
+lxml
+numpy
+extra_streamlit_components
+xlsxwriter
+stqdm
+pytz
+streamlit-authenticator
