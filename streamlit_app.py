@@ -228,7 +228,7 @@ async def capture_youtube_post(post_url, output_path="post_capture.png"):
 # Minimal Style을 위한 깔끔한 컨테이너
 with st.container(border=True):
     default_url = "https://t.co/ukaFlldhP9"
-    target_url = st.text_input("유튜브 게시글 URL", default_url) # 라벨 간소화
+    target_url = st.text_input("유튜브 게시글 URL", value="", placeholder=default_url) # 라벨 간소화
 
     if st.button("🚀 캡처 시작 (Capture)"):
         with st.spinner("⚡ 처리 중입니다..."):
